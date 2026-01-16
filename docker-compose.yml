@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - MONGO_URI=mongodb://mongo:27017/teacherDB
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+    depends_on:
+      - mongo
+    volumes:
+      - ./storage/uploads:/app/storage/uploads
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+volumes:
+  mongo-data:
