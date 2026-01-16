@@ -114,7 +114,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 body: formData
             });
-            const result = await response.json();
+
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                // Should handle HTML responses (like 413 from Nginx or 502/500 proxies)
+                console.error('Non-JSON response received');
+                throw new Error('Server returned an invalid response');
+            }
 
             if (response.ok) {
                 showStatus('تم تسجيل البيانات بنجاح!', 'success');
@@ -125,11 +133,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 schoolSelect.disabled = true;
                 schoolSelect.innerHTML = '<option value="">اختر المدرسة أولاً...</option>';
             } else {
-                showStatus(result.message || 'حدث خطأ أثناء التسجيل', 'error');
+                if (response.status === 413) {
+                    showStatus('حجم الملف كبير جداً. الحد الأقصى 10 ميجابايت', 'error');
+                } else {
+                    showStatus(result.message || 'حدث خطأ أثناء التسجيل', 'error');
+                }
             }
         } catch (error) {
             console.error('Submission error:', error);
-            showStatus('حدث خطأ في الاتصال بالخادم', 'error');
+            showStatus('حدث خطأ في الاتصال بالخادم (تأكد من صغر حجم الصورة)', 'error');
         } finally {
             submitBtn.disabled = false;
             submitBtn.classList.remove('loading');
